@@ -19,7 +19,7 @@ cpSync(path.join(root, "node_modules", "xlsx", "dist", "xlsx.full.min.js"), path
 const head = `<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
-<style>[hidden]{display:none!important}html{-webkit-text-size-adjust:100%}body{margin:0;padding-top:env(safe-area-inset-top,0px)}</style>
+<style>[hidden]{display:none!important}html{-webkit-text-size-adjust:100%}html{padding-top:env(safe-area-inset-top,0px)}body{margin:0}</style>
 </head><body>
 `;
 writeFileSync(path.join(www, "index.html"), head + body + "\n</body></html>\n");
