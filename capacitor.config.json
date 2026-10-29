@@ -1,0 +1,8 @@
+{
+  "appId": "com.yourname.campus",
+  "appName": "수강로드",
+  "webDir": "www",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never", "backgroundColor": "#f6f7f9" },
+  "plugins": { "StatusBar": { "overlaysWebView": false } }
+}

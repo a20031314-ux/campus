@@ -1,0 +1,77 @@
+# 아이폰: 클라우드 맥에서 빌드해 TestFlight로 올린다(내부 테스트 = 심사 없이 내 폰에만). 사람이 Actions에서 눌러야만 돈다.
+# LanguageBank의 같은 이름 워크플로를 옮겨 온 것. 같은 Apple 팀이라 App Store Connect API 키를 그대로 쓸 수 있다.
+# 준비(한 번): 이 저장소 Settings → Environments → "ios"
+#   secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8   vars: APPLE_TEAM_ID, IOS_BUNDLE_ID(com.yourname.campus)
+name: "iOS: TestFlight"
+on:
+  workflow_dispatch:
+concurrency: ios
+jobs:
+  build:
+    runs-on: macos-26
+    environment: ios
+    timeout-minutes: 60
+    env:
+      KEY_PATH: ${{ github.workspace }}/../asc/AuthKey.p8
+    steps:
+      - uses: actions/checkout@v4
+      - name: 설정 값 확인
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+        run: |
+          missing=""
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID IOS_BUNDLE_ID; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then echo "::error::environment 'ios'에 없는 값:$missing — README '아이폰' 참고"; exit 1; fi
+          xcodebuild -version
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run check
+      - name: 웹 번들 → iOS 프로젝트
+        env:
+          IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+        run: npm run build:ios
+      - name: App Store Connect 키
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$(dirname "$KEY_PATH")"; printf '%s\n' "$ASC_KEY_P8" > "$KEY_PATH"; chmod 600 "$KEY_PATH"
+      # 서명 없이 아카이브 → 다음 단계가 API 키로 배포용 서명(기기 등록 필요 없음, LanguageBank 2026-10-19 교훈)
+      - name: 아카이브
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          xcodebuild archive -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            MARKETING_VERSION=0.1 CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}"
+      - name: 서명하고 TestFlight에 올리기
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          echo "### TestFlight에 올림 (빌드 ${GITHUB_RUN_NUMBER}) — 처리 10~30분 뒤 아이폰 TestFlight 앱에 뜸" >> "$GITHUB_STEP_SUMMARY"
+      - name: 키 지우기
+        if: always()
+        run: rm -rf "$(dirname "$KEY_PATH")" "$RUNNER_TEMP/ExportOptions.plist"

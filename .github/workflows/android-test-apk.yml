@@ -1,0 +1,35 @@
+# 내 폰에 깔아 볼 안드로이드 테스트 APK. main에 올리거나 Actions에서 눌러 실행.
+# 결과: 실행 화면 아래 Artifacts의 "sugangroad-test-apk"(zip 안의 APK) → 폰에서 열어 설치.
+# 서명은 저장소의 테스트 키(android/app/test-device.keystore)라 새 APK를 덮어 설치할 수 있다. 스토어용 아님.
+name: "Android: 테스트 APK"
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency: android-test
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build:android
+      - name: APK 빌드
+        env:
+          BUILD_CODE: ${{ github.run_number }}
+        run: cd android && ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sugangroad-test-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+      - name: 요약
+        run: |
+          echo "### 테스트 APK 준비됨 (빌드 ${{ github.run_number }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "아래 Artifacts에서 sugangroad-test-apk를 받아 폰에서 설치하세요." >> "$GITHUB_STEP_SUMMARY"
