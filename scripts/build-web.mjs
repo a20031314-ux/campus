@@ -16,6 +16,12 @@ const CDN = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
 if (!body.includes(CDN)) throw new Error("SheetJS CDN 줄을 찾지 못했습니다");
 body = body.replace(CDN, "vendor/xlsx.full.min.js");
 cpSync(path.join(root, "node_modules", "xlsx", "dist", "xlsx.full.min.js"), path.join(www, "vendor", "xlsx.full.min.js"));
+// pdf.js(자료 보기·쪽 추출): CDN 대신 앱 안 파일. 동적 import라 './'로 시작해야 한다.
+const PDFJS_CDN = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/";
+if (!body.includes(PDFJS_CDN)) throw new Error("pdf.js CDN 줄을 찾지 못했습니다");
+body = body.replace(PDFJS_CDN, "./vendor/pdfjs/");
+mkdirSync(path.join(www, "vendor", "pdfjs"), { recursive: true });
+for (const f of ["pdf.min.mjs", "pdf.worker.min.mjs"]) cpSync(path.join(root, "node_modules", "pdfjs-dist", "legacy", "build", f), path.join(www, "vendor", "pdfjs", f));
 const head = `<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">

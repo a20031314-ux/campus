@@ -70,6 +70,34 @@ details.acc.sub>summary{padding:9px 10px} details.acc.sub>.accb{padding:0 10px 1
   .wishbar .btn{background:transparent;color:var(--sheet);border-color:rgba(255,255,255,.35)} .wishbar .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
   body.haswb{padding-bottom:calc(128px + env(safe-area-inset-bottom,0px))}
 }
+.col{display:flex;flex-direction:column;gap:12px;max-width:760px}
+.regtabs{margin-top:-4px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.card.now{border:2px solid var(--accent);background:var(--accent-soft)}
+.card.soon{border-color:var(--wait)} .card.after{border-color:var(--ok)}
+.card .lbl{font-size:12px;font-weight:700;color:var(--ink-2)} .card.now .lbl{color:var(--accent)}
+.card .big{font-size:19px;font-weight:700}
+.clist{display:flex;flex-direction:column;gap:8px}
+.citem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:11px 12px;text-align:left;width:100%}
+.citem .sw{width:10px;height:34px;border-radius:4px}
+.citem b{display:block;font-size:14.5px} .citem .small{color:var(--ink-2)}
+.weekbar{justify-content:center;gap:14px}
+.noteitem{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.noteitem textarea{font-family:var(--f-ui);font-size:15px;line-height:1.6;border:0;background:transparent;padding:0;min-height:120px;resize:none;outline:none}
+.noteitem .nh{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-2)}
+.fileitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:9px 12px}
+.fileitem .fi{font-size:20px}
+.evitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;align-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:8px 12px}
+.evitem.done b{text-decoration:line-through;color:var(--ink-2)}
+.dd{font-weight:700;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--rule-2)} .dd.hot{background:var(--fail-soft);color:var(--fail)}
+.sheet{position:fixed;inset:0;background:rgba(10,14,25,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheetb{background:var(--paper);width:min(720px,100%);max-height:88vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.viewer{position:fixed;inset:0;background:#111;z-index:45;display:flex;flex-direction:column}
+.viewer .vh{display:flex;gap:8px;align-items:center;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;color:#fff}
+.viewer .vh b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer .vb{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;align-items:center;padding:8px}
+.viewer canvas,.viewer img{max-width:100%;height:auto;background:#fff}
+.blk[data-cid]{cursor:pointer}
 .hint{padding:22px 12px;text-align:center;color:var(--ink-2);display:flex;flex-direction:column;gap:10px;align-items:center}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:16px 40px}
@@ -236,11 +264,63 @@ table.cmp tr.on td{background:var(--accent-soft)}
   </header>
 
   <nav class="nav" role="tablist" id="steps" aria-label="화면">
-    <button role="tab" data-step="strat" aria-selected="false"><span class="ic" aria-hidden="true">◎</span>전략</button>
-    <button role="tab" data-step="pick" aria-selected="true"><span class="ic" aria-hidden="true">＋</span>과목</button>
-    <button role="tab" data-step="build" aria-selected="false"><span class="ic" aria-hidden="true">▦</span>시간표</button>
+    <button role="tab" data-step="today" aria-selected="true"><span class="ic" aria-hidden="true">◷</span>오늘</button>
+    <button role="tab" data-step="courses" aria-selected="false"><span class="ic" aria-hidden="true">▤</span>과목</button>
+    <button role="tab" data-step="week" aria-selected="false"><span class="ic" aria-hidden="true">▦</span>시간표</button>
+    <button role="tab" data-step="pick" data-navkey="regs" aria-selected="false" hidden><span class="ic" aria-hidden="true">＋</span>수강신청</button>
     <button role="tab" data-step="me" aria-selected="false"><span class="ic" aria-hidden="true">●</span>내 정보</button>
   </nav>
+  <div class="tabs2 regtabs" id="regTabs" hidden>
+    <button data-step="strat">학기 전략</button><button data-step="pick">과목 담기</button><button data-step="build">시간표 조합</button><button data-step="reg">신청 진행</button>
+  </div>
+
+  <!-- 오늘 -->
+  <section id="view-today" hidden><div class="col" id="todayBox"></div></section>
+
+  <!-- 과목 목록 -->
+  <section id="view-courses" hidden>
+    <div class="col">
+      <div class="row" style="justify-content:space-between"><h2 id="termTitle">이번 학기 과목</h2><button class="btn primary small" type="button" id="addCourseBtn">＋ 과목 추가</button></div>
+      <div id="courseList" class="clist"></div>
+    </div>
+  </section>
+
+  <!-- 과목 공간 -->
+  <section id="view-course" hidden>
+    <div class="col">
+      <div class="row"><button class="btn small" type="button" data-go="courses" aria-label="과목 목록">‹</button><div style="min-width:0;flex:1"><h2 id="csName"></h2><div class="small muted" id="csMeta"></div></div><button class="btn small" type="button" id="csMore" aria-label="과목 설정">⋯</button></div>
+      <div class="row weekbar"><button class="btn small" type="button" id="wkPrev" aria-label="이전 주">‹</button><b id="wkLabel"></b><button class="btn small" type="button" id="wkNext" aria-label="다음 주">›</button></div>
+      <div class="tabs2" id="csTabs"><button data-cs="notes" aria-selected="true">노트</button><button data-cs="files" aria-selected="false">자료</button><button data-cs="events" aria-selected="false">일정</button></div>
+      <div data-cspane="notes" id="csNotes"></div>
+      <div data-cspane="files" id="csFiles" hidden></div>
+      <div data-cspane="events" id="csEvents" hidden></div>
+    </div>
+  </section>
+
+  <!-- 주간 시간표 -->
+  <section id="view-week" hidden>
+    <div class="panel"><div class="hd"><h2>이번 학기 시간표</h2><span class="muted small" id="weekSum"></span></div><div class="bd"><div class="ttwrap"><div id="weekTT"></div></div></div></div>
+  </section>
+
+  <!-- 과목 추가 시트 -->
+  <div class="sheet" id="addSheet" hidden><div class="sheetb">
+    <div class="row" style="justify-content:space-between"><h2>과목 추가</h2><button class="x" type="button" id="addClose" aria-label="닫기">×</button></div>
+    <div class="tabs2" id="addTabs"><button data-add="search" aria-selected="true">강의 찾기</button><button data-add="manual" aria-selected="false">직접 입력</button><button data-add="import" aria-selected="false">신청 결과에서</button></div>
+    <div data-addpane="search"><input type="search" id="addQ" placeholder="과목명 · 코드 · 교수"><div id="addResults" class="clist"></div></div>
+    <div data-addpane="manual" hidden>
+      <div class="formgrid">
+        <label style="grid-column:1/-1">과목명<input type="text" id="mcName"></label>
+        <label style="grid-column:1/-1">요일<span class="days" id="mcDays"></span></label>
+        <label>시작<input type="time" id="mcStart" value="09:00"></label>
+        <label>끝<input type="time" id="mcEnd" value="10:15"></label>
+        <label>강의실<input type="text" id="mcRoom"></label>
+        <label>교수<input type="text" id="mcProf"></label>
+      </div>
+      <div class="row"><button class="btn small" type="button" id="mcAddTime">＋ 다른 시간 추가</button><span class="small muted" id="mcTimes"></span></div>
+      <div class="row"><button class="btn primary" type="button" id="mcSave">추가</button></div>
+    </div>
+    <div data-addpane="import" hidden><div id="importList"></div></div>
+  </div></div>
 
   <!-- 전략 -->
   <section id="view-strat" class="grid2" hidden>
@@ -442,6 +522,11 @@ GEN1001,03,글쓰기와 표현,교양필수,2,이교수,금 13:00-14:50,인문�
           </details>
         </div></details>
       </div></details>
+      <details class="acc panel" data-acc="mods"><summary><b>쓸 기능</b><span class="muted small" id="sumMods"></span></summary><div class="accb">
+        <label class="row small"><input type="checkbox" id="modReg"> 수강신청 (학기 전략 · 과목 담기 · 시간표 조합 · 신청 진행)</label>
+        <label class="row small" id="notifRow"><input type="checkbox" id="modNotif"> 수업 시작 알림 (누르면 그 과목 노트가 열림)</label>
+        <label class="small">학기 시작일 <input type="date" id="termStart"></label>
+      </div></details>
       <details class="acc panel" data-acc="basic"><summary><b>기본 정보</b><span class="muted small" id="sumBasic"></span></summary><div class="accb formgrid">
         <label>학교<input type="text" id="p-school"></label>
         <label>학과<select id="p-dept" style="min-width:180px"></select><input type="text" id="p-dept-t" placeholder="학과 이름" hidden style="min-width:160px"></label>
@@ -568,7 +653,7 @@ function loadSNU(){
 }
 
 /* ---------- 상태 ---------- */
-const state={src:'snu', step:'pick', wish:{snu:[],demo:[],mine:[]}, opts:defaultOpts(), results:[], idx:0,
+const state={src:'snu', step:'today', wish:{snu:[],demo:[],mine:[]}, opts:defaultOpts(), results:[], idx:0,
   plan:{snu:null,demo:null,mine:null}, status:{snu:{},demo:{},mine:{}}, share:false,
   history:{snu:[],demo:[],mine:[]}, scen:null,
   profile:{school:'서울대학교', dept:'수리과학부', year:'4학년', mineFirst:true, retakeMax:'C+', autoRetake:true, gradeRule:true}};
@@ -782,9 +867,9 @@ function renderTT(el,list,opt){
     html+=`<div class="daycol" style="height:${H}px">`;
     for(let t=lo+60;t<hi;t+=60) html+=`<div class="line" style="top:${(t-lo)*pxPerMin}px"></div>`;
     for(const s of list) for(const m of s.meetings.filter(x=>x.d===d)){
-      const c=colorOf(s.code); const st=opt.status?opt.status[s.id]:null;
+      const c=colorOf(s.ckey||s.code); const st=opt.status?opt.status[s.id]:null;
       const cls=st==='ok'?' locked':st==='fail'?' failed':'';
-      html+=`<div class="blk${cls}" style="top:${(m.s-lo)*pxPerMin}px;height:${Math.max(18,(m.e-m.s)*pxPerMin)}px;background:var(--c${c});color:var(--c${c}i)" title="${esc(s.name)} ${esc(s.code)}-${esc(s.sec)} ${esc(m.room||s.room)}">
+      html+=`<div class="blk${cls}" ${s.cid?`data-cid="${esc(s.cid)}"`:''} style="top:${(m.s-lo)*pxPerMin}px;height:${Math.max(18,(m.e-m.s)*pxPerMin)}px;background:var(--c${c});color:var(--c${c}i)" title="${esc(s.name)} ${esc(s.code)}-${esc(s.sec)} ${esc(m.room||s.room)}">
         <b>${esc(s.name)}</b><span class="code">${esc(s.code)}${s.sec?'-'+esc(s.sec):''}</span>${(m.e-m.s)>=60?`<span>${esc(m.room||s.room)}</span>`:''}</div>`;
     }
     html+='</div>';
@@ -1087,8 +1172,12 @@ $('#regReset').addEventListener('click',()=>{ state.status[state.src]={}; save()
 /* ---------- 단계 ---------- */
 function setStep(s){
   state.step=s;
-  document.querySelectorAll('#steps [data-step]').forEach(b=>b.setAttribute('aria-selected',b.dataset.step===(s==='reg'?'build':s)));
+  const REGS=['strat','pick','build','reg'];
+  document.querySelectorAll('#steps [data-step]').forEach(b=>b.setAttribute('aria-selected',REGS.includes(s)?b.dataset.navkey==='regs':(b.dataset.step===(s==='course'?'courses':s))));
+  $('#regTabs').hidden=!REGS.includes(s); document.querySelectorAll('#regTabs [data-step]').forEach(b=>b.setAttribute('aria-selected',b.dataset.step===s));
   $('#view-pick').hidden=s!=='pick'; $('#view-build').hidden=s!=='build'; $('#view-reg').hidden=s!=='reg'; $('#view-strat').hidden=s!=='strat'; $('#view-me').hidden=s!=='me';
+  ['today','courses','course','week'].forEach(v=>$('#view-'+v).hidden=s!==v);
+  if(s==='today') renderToday(); if(s==='courses') renderCourses(); if(s==='week') renderWeek();
   if(s==='me'){ renderProfile(); renderHistory(); }
   updWishBar(wish().length, wish().reduce((a,w)=>a+(courses().find(c=>c.code===w.code)?.credits||0),0));
   window.scrollTo({top:0});
@@ -1097,6 +1186,7 @@ function setStep(s){
   if(s==='reg') renderReg();
 }
 $('#steps').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) setStep(b.dataset.step); });
+$('#regTabs').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) setStep(b.dataset.step); });
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(b) setStep(b.dataset.go); });
 
 /* ---------- 수강 이력 UI ---------- */
@@ -1561,16 +1651,240 @@ $('#sc-sample-go').addEventListener('click',e=>{
   delete b.dataset.armed; b.textContent='예시 이력으로 바꾸기';
   state.history.snu=sampleHistory($('#sc-sample').value); scen(); state.scen.list.forEach(x=>x.flags.english=true); save(); state.results=[]; renderAll(); toast('예시 이력으로 바꿨습니다'); });
 
+/* ---------- 이번 학기 과목 · 오늘 · 과목 공간 (학습 공간 M1) ---------- */
+const SLS='sugangroad-study-v1';
+const PDFJS_BASE='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/';
+const study={term:'2026-2', start:'2026-09-01', courses:[], notes:{}, events:{}, regOn:false, notif:false};
+function sSave(){ try{ localStorage.setItem(SLS,JSON.stringify(study)); }catch(e){} }
+function sLoad(){ try{ const j=JSON.parse(localStorage.getItem(SLS)||'null'); if(j) Object.assign(study,j); }catch(e){} }
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dayIdx=d=>(d.getDay()+6)%7; // 월=0
+const nowMin=d=>d.getHours()*60+d.getMinutes();
+function weekOf(dateStr){ const st=new Date(study.start+'T00:00:00'); const m=new Date(st); m.setDate(st.getDate()-dayIdx(st)); const d=new Date(dateStr+'T00:00:00'); return Math.max(1,Math.floor((d-m)/604800000)+1); }
+function weekRange(w){ const st=new Date(study.start+'T00:00:00'); const m=new Date(st); m.setDate(st.getDate()-dayIdx(st)+(w-1)*7); const e=new Date(m); e.setDate(m.getDate()+6); return [m,e]; }
+const md=d=>`${d.getMonth()+1}/${d.getDate()}`;
+const courseById=id=>study.courses.find(c=>c.id===id);
+const newId=p=>p+Math.random().toString(36).slice(2,9);
+function asSection(c){ return {id:c.id,cid:c.id,ckey:c.code||c.name,code:c.code||'',sec:c.sec||'',name:c.name,room:c.room||'',prof:c.prof||'',meetings:c.meetings,credits:c.credits||0}; }
+function nextMeeting(c,from){ from=from||new Date(); const t=nowMin(from), d0=dayIdx(from); let best=null;
+  for(const m of c.meetings){ let dd=(m.d-d0+7)%7; if(dd===0&&m.s<=t) dd=7; const k=dd*1440+m.s; if(!best||k<best.k) best={k,m,dd}; } return best; }
+const DN=['월','화','수','목','금','토','일'];
+function meetLabel(m){ return `${DN[m.d]} ${fmt(m.s)}–${fmt(m.e)}`; }
+function dday(dateStr){ const t=new Date(ymd(new Date())+'T00:00:00'), d=new Date(dateStr+'T00:00:00'); return Math.round((d-t)/86400000); }
+const ddTxt=n=>n===0?'D-day':n>0?`D-${n}`:`D+${-n}`;
+
+/* 오늘 */
+function renderToday(){
+  const now=new Date(), t=nowMin(now), di=dayIdx(now);
+  const todays=[]; for(const c of study.courses) for(const m of c.meetings) if(m.d===di) todays.push({c,m});
+  todays.sort((a,b)=>a.m.s-b.m.s);
+  const cur=todays.find(x=>t>=x.m.s-10&&t<x.m.e);
+  const soon=!cur&&todays.find(x=>x.m.s-t>10&&x.m.s-t<=60);
+  const after=!cur&&todays.filter(x=>t>=x.m.e&&t<x.m.e+90).pop();
+  const evs=[]; for(const c of study.courses) for(const e of (study.events[c.id]||[])) if(!e.done){ const n=dday(e.date); if(n>=0&&n<=14) evs.push({c,e,n}); }
+  evs.sort((a,b)=>a.n-b.n);
+  let h=`<div class="row" style="justify-content:space-between"><h2>${now.getMonth()+1}월 ${now.getDate()}일 ${DN[di]}요일</h2><span class="muted small">${weekOf(ymd(now))}주차</span></div>`;
+  if(!study.courses.length){ h+=`<div class="hint">이번 학기 과목이 없습니다.<button class="btn primary" type="button" data-addcourse>＋ 과목 추가</button></div>`; $('#todayBox').innerHTML=h; return; }
+  const card=(cls,lbl,x,btns)=>`<div class="card ${cls}"><span class="lbl">${lbl}</span><span class="big">${esc(x.c.name)}</span><span class="small muted">${meetLabel(x.m)}${x.m.room||x.c.room?' · '+esc(x.m.room||x.c.room):''}</span><div class="row">${btns}</div></div>`;
+  if(cur) h+=card('now','지금 수업',cur,`<button class="btn primary" type="button" data-opencs="${cur.c.id}" data-note="1">필기 열기</button><button class="btn" type="button" data-opencs="${cur.c.id}" data-tab="files">자료</button>`);
+  if(soon) h+=card('soon',`${soon.m.s-t}분 뒤`,soon,`<button class="btn" type="button" data-opencs="${soon.c.id}">지난 노트 보기</button>`);
+  if(after) h+=card('after','방금 끝난 수업',after,`<button class="btn primary" type="button" data-opencs="${after.c.id}" data-note="1">노트 정리</button><button class="btn" type="button" data-opencs="${after.c.id}" data-tab="files">자료 올리기</button>`);
+  const rest=todays.filter(x=>x!==cur&&x!==soon&&x!==after&&x.m.e>t);
+  if(rest.length) h+=`<div class="clist">${rest.map(x=>`<button class="citem" type="button" data-opencs="${x.c.id}"><span class="sw" style="background:var(--c${colorOf(x.c.code||x.c.name)}i)"></span><span><b>${esc(x.c.name)}</b><span class="small">${fmt(x.m.s)}–${fmt(x.m.e)}${x.m.room?' · '+esc(x.m.room):''}</span></span><span class="muted">›</span></button>`).join('')}</div>`;
+  if(!todays.length) { const nx=study.courses.map(c=>({c,n:nextMeeting(c,now)})).filter(x=>x.n).sort((a,b)=>a.n.k-b.n.k)[0];
+    h+=`<div class="card"><span class="lbl">오늘은 수업이 없어요</span>${nx?`<span class="small">다음 수업 · ${esc(nx.c.name)} ${meetLabel(nx.n.m)}</span>`:''}</div>`; }
+  else if(!cur&&!soon&&!after&&!rest.length) h+=`<div class="card"><span class="lbl">오늘 수업 끝</span></div>`;
+  if(evs.length) h+=`<h3>다가오는 일정</h3><div class="clist">${evs.map(x=>`<button class="evitem" type="button" data-opencs="${x.c.id}" data-tab="events"><span class="dd ${x.n<=3?'hot':''}">${ddTxt(x.n)}</span><span style="min-width:0;text-align:left"><b>${esc(x.e.title||x.e.type)}</b> <span class="small muted">${esc(x.c.name)} · ${esc(x.e.type)}</span></span><span></span><span class="muted">›</span></button>`).join('')}</div>`;
+  $('#todayBox').innerHTML=h;
+}
+setInterval(()=>{ if(state.step==='today') renderToday(); },60000);
+
+/* 과목 목록 */
+function renderCourses(){
+  $('#termTitle').textContent=`${study.term}학기 과목`;
+  $('#courseList').innerHTML=study.courses.length?study.courses.map(c=>{ const n=nextMeeting(c); const ev=(study.events[c.id]||[]).filter(e=>!e.done&&dday(e.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0];
+    return `<button class="citem" type="button" data-opencs="${c.id}"><span class="sw" style="background:var(--c${colorOf(c.code||c.name)}i)"></span><span><b>${esc(c.name)}</b><span class="small">${c.meetings.map(meetLabel).join(', ')||'시간 없음'}${c.room?' · '+esc(c.room):''}</span></span><span class="row" style="gap:6px">${ev?`<span class="dd ${dday(ev.date)<=3?'hot':''}">${esc(ev.type)} ${ddTxt(dday(ev.date))}</span>`:''}<span class="muted">›</span></span></button>`; }).join(''):`<div class="hint">과목을 추가하면 수업 시간마다 그 과목이 오늘 화면에 뜹니다.<button class="btn primary" type="button" data-addcourse>＋ 과목 추가</button></div>`;
+}
+
+/* 주간 시간표 */
+function renderWeek(){
+  const list=study.courses.map(asSection);
+  $('#weekSum').textContent=list.length?`${list.length}과목`:'';
+  if(!list.length){ $('#weekTT').innerHTML=`<div class="hint">과목이 없습니다.<button class="btn primary" type="button" data-addcourse>＋ 과목 추가</button></div>`; return; }
+  renderTT($('#weekTT'),list,{});
+}
+$('#weekTT').addEventListener('click',e=>{ const b=e.target.closest('[data-cid]'); if(b) openCourse(b.dataset.cid); });
+
+/* 과목 공간 */
+const cs={id:null,week:1,tab:'notes'};
+function openCourse(id,opt){ opt=opt||{}; const c=courseById(id); if(!c) return;
+  cs.id=id; cs.week=weekOf(ymd(new Date())); cs.tab=opt.tab||'notes'; setStep('course'); renderCourse();
+  if(opt.note){ const n=todayNote(id,true); renderCourse(); setTimeout(()=>{ const ta=document.querySelector(`[data-nid="${n.id}"]`); if(ta){ ta.focus(); ta.scrollIntoView({block:'center'}); } },50); } }
+function todayNote(cid,create){ const arr=study.notes[cid]||(study.notes[cid]=[]); const d=ymd(new Date()); let n=arr.find(x=>x.date===d); if(!n&&create){ n={id:newId('n'),date:d,text:'',updated:Date.now()}; arr.push(n); sSave(); } return n; }
+function renderCourse(){
+  const c=courseById(cs.id); if(!c) return;
+  $('#csName').textContent=c.name;
+  const n=nextMeeting(c); $('#csMeta').textContent=[c.prof,c.room,n?`다음 수업 ${meetLabel(n.m)}`:''].filter(Boolean).join(' · ');
+  const [a,b]=weekRange(cs.week); $('#wkLabel').textContent=`${cs.week}주차 · ${md(a)}~${md(b)}`;
+  document.querySelectorAll('#csTabs [data-cs]').forEach(x=>x.setAttribute('aria-selected',x.dataset.cs===cs.tab));
+  document.querySelectorAll('[data-cspane]').forEach(x=>x.hidden=x.dataset.cspane!==cs.tab);
+  if(cs.tab==='notes') renderNotes(c); if(cs.tab==='files') renderFiles(c); if(cs.tab==='events') renderEvents(c);
+}
+$('#csTabs').addEventListener('click',e=>{ const b=e.target.closest('[data-cs]'); if(b){ cs.tab=b.dataset.cs; renderCourse(); } });
+$('#wkPrev').addEventListener('click',()=>{ if(cs.week>1){ cs.week--; renderCourse(); } });
+$('#wkNext').addEventListener('click',()=>{ if(cs.week<20){ cs.week++; renderCourse(); } });
+function renderNotes(c){
+  const arr=(study.notes[c.id]||[]).filter(x=>weekOf(x.date)===cs.week).sort((a,b)=>a.date.localeCompare(b.date));
+  const isThis=cs.week===weekOf(ymd(new Date())); const hasToday=arr.some(x=>x.date===ymd(new Date()));
+  $('#csNotes').innerHTML=`<div class="clist">${arr.map(x=>{ const d=new Date(x.date+'T00:00:00'); return `<div class="noteitem"><div class="nh"><span>${md(d)} ${DN[dayIdx(d)]}</span><button class="x" type="button" data-delnote="${x.id}" aria-label="노트 지우기">×</button></div><textarea data-nid="${x.id}" rows="5">${esc(x.text)}</textarea></div>`; }).join('')}</div>
+    ${isThis&&!hasToday?`<button class="btn primary" type="button" id="newNote">＋ 오늘 노트</button>`:''}${!arr.length&&!isThis?'<div class="hint">이 주에는 노트가 없습니다.</div>':''}`;
+  document.querySelectorAll('#csNotes textarea').forEach(autoGrow);
+}
+function autoGrow(t){ t.style.height='auto'; t.style.height=Math.max(120,t.scrollHeight)+'px'; }
+let noteTimer=null;
+$('#csNotes').addEventListener('input',e=>{ const t=e.target.closest('[data-nid]'); if(!t) return; autoGrow(t);
+  const n=(study.notes[cs.id]||[]).find(x=>x.id===t.dataset.nid); if(n){ n.text=t.value; n.updated=Date.now(); clearTimeout(noteTimer); noteTimer=setTimeout(sSave,400); } });
+$('#csNotes').addEventListener('click',e=>{
+  if(e.target.closest('#newNote')){ const n=todayNote(cs.id,true); renderCourse(); setTimeout(()=>document.querySelector(`[data-nid="${n.id}"]`)?.focus(),30); }
+  const d=e.target.closest('[data-delnote]'); if(d){ const n=(study.notes[cs.id]||[]).find(x=>x.id===d.dataset.delnote); if(n&&(!n.text.trim()||d.dataset.armed)){ study.notes[cs.id]=study.notes[cs.id].filter(x=>x!==n); sSave(); renderCourse(); } else if(n){ d.dataset.armed='1'; d.textContent='지우기?'; setTimeout(()=>{ delete d.dataset.armed; d.textContent='×'; },3000); } }
+});
+
+/* 자료(기기 저장: IndexedDB) */
+let idbP=null;
+function idb(){ return idbP||(idbP=new Promise((ok,no)=>{ const r=indexedDB.open('sugangroad-files',1); r.onupgradeneeded=()=>{ const s=r.result.createObjectStore('files',{keyPath:'id'}); s.createIndex('cid','cid'); }; r.onsuccess=()=>ok(r.result); r.onerror=()=>no(r.error); })); }
+async function filesOf(cid){ const db=await idb(); return new Promise(ok=>{ const q=db.transaction('files').objectStore('files').index('cid').getAll(cid); q.onsuccess=()=>ok(q.result||[]); q.onerror=()=>ok([]); }); }
+async function putFile(rec){ const db=await idb(); return new Promise((ok,no)=>{ const tx=db.transaction('files','readwrite'); tx.objectStore('files').put(rec); tx.oncomplete=ok; tx.onerror=()=>no(tx.error); }); }
+async function delFile(id){ const db=await idb(); return new Promise(ok=>{ const tx=db.transaction('files','readwrite'); tx.objectStore('files').delete(id); tx.oncomplete=ok; }); }
+async function getFile(id){ const db=await idb(); return new Promise(ok=>{ const q=db.transaction('files').objectStore('files').get(id); q.onsuccess=()=>ok(q.result); }); }
+const kb=n=>n>1048576?(n/1048576).toFixed(1)+'MB':Math.ceil(n/1024)+'KB';
+async function renderFiles(c){
+  let all=[]; try{ all=await filesOf(c.id); }catch(e){}
+  const arr=all.filter(f=>f.week===cs.week).sort((a,b)=>a.added-b.added);
+  const icon=t=>/pdf/.test(t)?'📄':/image/.test(t)?'🖼':/presentation|powerpoint/.test(t)?'📊':'📎';
+  $('#csFiles').innerHTML=`<label class="btn primary" style="text-align:center">＋ 자료 올리기 (PDF · 사진 · PPT)<input type="file" id="fileIn" accept="application/pdf,image/*,.pptx,.ppt" multiple hidden></label>
+    <div class="clist">${arr.map(f=>`<div class="fileitem"><span class="fi">${icon(f.type)}</span><button type="button" class="linkish" data-openfile="${f.id}" style="text-align:left;border:0;background:transparent;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</b><span class="small muted">${kb(f.size)}${f.pages?' · '+f.pages+'쪽':''}</span></button><button class="x" type="button" data-delfile="${f.id}" aria-label="자료 지우기">×</button></div>`).join('')||'<div class="hint">이 주에 올린 자료가 없습니다.</div>'}</div>
+    <p class="small muted" style="margin:0">자료는 이 폰에만 저장됩니다. ${all.length?`이 과목 전체 ${all.length}개 · ${kb(all.reduce((a,f)=>a+f.size,0))}`:''}</p>`;
+}
+$('#csFiles').addEventListener('change',async e=>{ if(e.target.id!=='fileIn') return; const files=[...e.target.files];
+  for(const f of files){ const rec={id:newId('f'),cid:cs.id,week:cs.week,name:f.name,type:f.type||'',size:f.size,added:Date.now(),blob:f};
+    if(/pdf/.test(rec.type)){ try{ const pdf=await openPdf(f); rec.pages=pdf.numPages; }catch(err){} }
+    try{ await putFile(rec); }catch(err){ toast('저장 공간이 부족해 올리지 못했습니다'); } }
+  renderFiles(courseById(cs.id)); toast(`${files.length}개 자료를 올렸습니다`); });
+$('#csFiles').addEventListener('click',async e=>{
+  const o=e.target.closest('[data-openfile]'); if(o){ const f=await getFile(o.dataset.openfile); if(f) viewFile(f); return; }
+  const d=e.target.closest('[data-delfile]'); if(d){ if(!d.dataset.armed){ d.dataset.armed='1'; d.textContent='지우기?'; setTimeout(()=>{ delete d.dataset.armed; d.textContent='×'; },3000); return; } await delFile(d.dataset.delfile); renderFiles(courseById(cs.id)); }
+});
+let pdfjsP=null;
+function pdfjs(){ return pdfjsP||(pdfjsP=import(PDFJS_BASE+'pdf.min.mjs').then(m=>{ m.GlobalWorkerOptions.workerSrc=PDFJS_BASE+'pdf.worker.min.mjs'; return m; })); }
+async function openPdf(blob){ const lib=await pdfjs(); const data=new Uint8Array(await blob.arrayBuffer()); return lib.getDocument({data}).promise; }
+async function viewFile(f){
+  const v=document.createElement('div'); v.className='viewer'; v.innerHTML=`<div class="vh"><button class="btn small" type="button" data-vclose>닫기</button><b>${esc(f.name)}</b></div><div class="vb"><div class="small" style="color:#aaa">불러오는 중…</div></div>`;
+  document.body.appendChild(v); v.addEventListener('click',e=>{ if(e.target.closest('[data-vclose]')) v.remove(); });
+  const vb=v.querySelector('.vb'); const url=URL.createObjectURL(f.blob);
+  if(/image/.test(f.type)){ vb.innerHTML=`<img src="${url}" alt="">`; return; }
+  if(/pdf/.test(f.type)){ try{ const pdf=await openPdf(f.blob); vb.innerHTML='';
+      const w=Math.min(1100,v.clientWidth-16);
+      for(let i=1;i<=pdf.numPages;i++){ const pg=await pdf.getPage(i); const vp0=pg.getViewport({scale:1}); const sc=w/vp0.width*(window.devicePixelRatio||1); const vp=pg.getViewport({scale:sc});
+        const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height; cv.style.width=(vp.width/(window.devicePixelRatio||1))+'px'; vb.appendChild(cv);
+        await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise; if(!document.body.contains(v)) return; }
+    }catch(err){ vb.innerHTML='<div style="color:#fff">PDF를 열지 못했습니다.</div>'; } return; }
+  vb.innerHTML=`<div style="color:#fff;text-align:center">이 형식은 앱 안에서 미리 볼 수 없습니다.<br><a style="color:#9cf" href="${url}" download="${esc(f.name)}">파일로 열기</a></div>`;
+}
+
+/* 일정 */
+const EV_TYPES=['과제','퀴즈','중간고사','기말고사','기타'];
+function renderEvents(c){
+  const arr=(study.events[c.id]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  $('#csEvents').innerHTML=`<div class="row"><select id="evType">${EV_TYPES.map(t=>`<option>${t}</option>`).join('')}</select><input type="text" id="evTitle" placeholder="내용" style="flex:1;min-width:120px"><input type="date" id="evDate" value="${ymd(new Date())}"><button class="btn primary small" type="button" id="evAdd">추가</button></div>
+    <div class="clist">${arr.map(e=>{ const n=dday(e.date); return `<div class="evitem ${e.done?'done':''}"><input type="checkbox" data-evdone="${e.id}" ${e.done?'checked':''} aria-label="끝냄"><span style="min-width:0"><b>${esc(e.title||e.type)}</b> <span class="small muted">${esc(e.type)} · ${esc(e.date.slice(5).replace('-','/'))}</span></span><span class="dd ${!e.done&&n>=0&&n<=3?'hot':''}">${ddTxt(n)}</span><button class="x" type="button" data-delev="${e.id}" aria-label="일정 지우기">×</button></div>`; }).join('')||'<div class="hint">과제·퀴즈·시험 날짜를 넣으면 오늘 화면에 D-day가 뜹니다.</div>'}</div>`;
+}
+$('#csEvents').addEventListener('click',e=>{
+  if(e.target.closest('#evAdd')){ const date=$('#evDate').value; if(!date){ toast('날짜를 고르세요'); return; } (study.events[cs.id]||(study.events[cs.id]=[])).push({id:newId('e'),type:$('#evType').value,title:$('#evTitle').value.trim(),date,done:false}); sSave(); renderCourse(); }
+  const d=e.target.closest('[data-delev]'); if(d){ study.events[cs.id]=(study.events[cs.id]||[]).filter(x=>x.id!==d.dataset.delev); sSave(); renderCourse(); }
+});
+$('#csEvents').addEventListener('change',e=>{ const c=e.target.closest('[data-evdone]'); if(c){ const ev=(study.events[cs.id]||[]).find(x=>x.id===c.dataset.evdone); ev.done=c.checked; sSave(); renderCourse(); } });
+
+/* 과목 설정(⋯): 이름·강의실 고치기, 지우기 */
+$('#csMore').addEventListener('click',()=>{ const c=courseById(cs.id); if(!c) return;
+  const nm=prompt('과목 이름',c.name); if(nm===null) return; if(nm.trim()===''){ if(confirm(`${c.name}을(를) 이번 학기 과목에서 지울까요? 노트·일정도 함께 지워집니다.`)){ study.courses=study.courses.filter(x=>x!==c); delete study.notes[c.id]; delete study.events[c.id]; sSave(); scheduleNotifs(); setStep('courses'); } return; }
+  c.name=nm.trim(); const rm=prompt('강의실',c.room||''); if(rm!==null) c.room=rm.trim(); sSave(); scheduleNotifs(); renderCourse(); });
+
+/* 과목 추가 시트 */
+const mc={times:[]};
+function openAdd(){ $('#addSheet').hidden=false; addTab(state.src==='snu'?'search':'manual'); $('#mcDays').innerHTML=DN.slice(0,6).map((d,i)=>`<label><input type="checkbox" value="${i}"><span>${d}</span></label>`).join(''); mc.times=[]; $('#mcTimes').textContent=''; }
+function addTab(k){ document.querySelectorAll('#addTabs [data-add]').forEach(b=>b.setAttribute('aria-selected',b.dataset.add===k)); document.querySelectorAll('[data-addpane]').forEach(p=>p.hidden=p.dataset.addpane!==k);
+  if(k==='search') renderAddResults(); if(k==='import') renderImport(); }
+$('#addTabs').addEventListener('click',e=>{ const b=e.target.closest('[data-add]'); if(b) addTab(b.dataset.add); });
+$('#addClose').addEventListener('click',()=>{ $('#addSheet').hidden=true; });
+$('#addSheet').addEventListener('click',e=>{ if(e.target.id==='addSheet') $('#addSheet').hidden=true; });
+document.addEventListener('click',e=>{ if(e.target.closest('[data-addcourse]')) openAdd(); });
+$('#addCourseBtn').addEventListener('click',openAdd);
+$('#addQ').addEventListener('input',renderAddResults);
+function renderAddResults(){
+  const q=$('#addQ').value.trim().toLowerCase();
+  if(state.src!=='snu'||!SOURCES.snu.sections.length){ $('#addResults').innerHTML='<div class="hint">이 학교는 강의 목록이 없습니다. \'직접 입력\'으로 넣어 주세요.</div>'; return; }
+  if(q.length<1){ $('#addResults').innerHTML='<div class="hint">과목명·코드·교수로 찾으세요.</div>'; return; }
+  const have=new Set(study.courses.map(c=>c.secId));
+  const hits=SOURCES.snu.sections.filter(s=>(s.name+' '+s.code+' '+s.prof).toLowerCase().includes(q)).slice(0,40);
+  $('#addResults').innerHTML=hits.map(s=>`<button class="citem" type="button" data-addsec="${esc(s.id)}" ${have.has(s.id)?'disabled':''}><span class="sw" style="background:var(--c${colorOf(s.code)}i)"></span><span><b>${esc(s.name)} <span class="code muted">${esc(s.code)}-${esc(s.sec)}</span></b><span class="small">${esc(timeLabel(s))} · ${esc(s.prof)}${s.room?' · '+esc(s.room):''}</span></span><span class="muted">${have.has(s.id)?'추가됨':'＋'}</span></button>`).join('')||'<div class="hint">찾는 과목이 없습니다.</div>';
+}
+function addFromSection(s){ if(study.courses.some(c=>c.secId===s.id)) return;
+  study.courses.push({id:newId('c'),secId:s.id,code:s.code,sec:s.sec,name:s.name,prof:s.prof,room:(s.meetings[0]&&s.meetings[0].room)||s.room,credits:s.credits,meetings:s.meetings.map(m=>({d:m.d,s:m.s,e:m.e,room:m.room||''}))}); }
+$('#addResults').addEventListener('click',e=>{ const b=e.target.closest('[data-addsec]'); if(!b) return; const s=SOURCES.snu.sections.find(x=>x.id===b.dataset.addsec); if(s){ addFromSection(s); sSave(); scheduleNotifs(); renderAddResults(); toast(`${s.name}을(를) 추가했습니다`); refreshStudyViews(); } });
+const toMin=v=>{ const [h,m]=String(v||'').split(':').map(Number); return isNaN(h)?null:h*60+(m||0); };
+function readManualTime(){ const days=[...document.querySelectorAll('#mcDays input:checked')].map(i=>+i.value); const s=toMin($('#mcStart').value), e=toMin($('#mcEnd').value);
+  if(!days.length||s==null||e==null||e<=s) return null; return days.map(d=>({d,s,e,room:$('#mcRoom').value.trim()})); }
+$('#mcAddTime').addEventListener('click',()=>{ const t=readManualTime(); if(!t){ toast('요일과 시간을 확인하세요'); return; } mc.times.push(...t); document.querySelectorAll('#mcDays input').forEach(i=>i.checked=false); $('#mcTimes').textContent=mc.times.map(meetLabel).join(', '); });
+$('#mcSave').addEventListener('click',()=>{ const name=$('#mcName').value.trim(); if(!name){ toast('과목명을 넣으세요'); return; }
+  const t=readManualTime(); const meetings=mc.times.concat(t||[]);
+  study.courses.push({id:newId('c'),code:'',name,prof:$('#mcProf').value.trim(),room:$('#mcRoom').value.trim(),meetings}); sSave(); scheduleNotifs();
+  $('#mcName').value=''; mc.times=[]; $('#mcTimes').textContent=''; document.querySelectorAll('#mcDays input').forEach(i=>i.checked=false); toast(`${name}을(를) 추가했습니다`); refreshStudyViews(); });
+function renderImport(){ const p=state.plan.snu, st=state.status.snu; const secs=(p||[]).map(id=>SOURCES.snu.sections.find(s=>s.id===id)).filter(Boolean);
+  const ok=secs.filter(s=>st[s.id]==='ok');
+  $('#importList').innerHTML=secs.length?`<p class="small muted" style="margin:0">신청 진행에서 '성공'으로 표시한 과목 ${ok.length}개</p><button class="btn primary" type="button" id="doImport" ${ok.length?'':'disabled'}>이번 학기 과목으로 가져오기</button>`:'<div class="hint">신청 진행 기록이 없습니다.</div>'; }
+$('#importList').addEventListener('click',e=>{ if(!e.target.closest('#doImport')) return; const p=state.plan.snu, st=state.status.snu; let n=0;
+  for(const id of p||[]){ const s=SOURCES.snu.sections.find(x=>x.id===id); if(s&&st[id]==='ok'&&!study.courses.some(c=>c.secId===id)){ addFromSection(s); n++; } }
+  sSave(); scheduleNotifs(); toast(`${n}과목을 가져왔습니다`); $('#addSheet').hidden=true; refreshStudyViews(); });
+function refreshStudyViews(){ if(state.step==='today') renderToday(); if(state.step==='courses') renderCourses(); if(state.step==='week') renderWeek(); }
+
+/* 수업 시작 알림 (앱에서만, Capacitor LocalNotifications) */
+const LN=()=>window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
+async function scheduleNotifs(){ const L=LN(); if(!L) return;
+  try{ const pend=await L.getPending(); if(pend.notifications.length) await L.cancel({notifications:pend.notifications.map(n=>({id:n.id}))});
+    if(!study.notif) return;
+    const list=[]; let id=1000;
+    for(const c of study.courses) for(const m of c.meetings){ const t=Math.max(0,m.s-5);
+      list.push({id:id++,title:`${c.name} · ${fmt(m.s)} 시작`,body:[m.room||c.room,'눌러서 필기 열기'].filter(Boolean).join(' · '),schedule:{on:{weekday:((m.d+1)%7)+1,hour:Math.floor(t/60),minute:t%60},allowWhileIdle:true},extra:{cid:c.id}}); }
+    if(list.length) await L.schedule({notifications:list});
+  }catch(e){ console.warn('알림 예약 실패',e); } }
+async function setNotif(on){ const L=LN(); if(!L){ toast('알림은 앱에서만 쓸 수 있습니다'); $('#modNotif').checked=false; return; }
+  if(on){ const p=await L.requestPermissions(); if(p.display!=='granted'){ toast('알림 권한이 꺼져 있습니다'); $('#modNotif').checked=false; study.notif=false; sSave(); return; } }
+  study.notif=on; sSave(); scheduleNotifs(); toast(on?'수업 5분 전에 알려 드립니다':'수업 알림을 껐습니다'); }
+if(LN()) LN().addListener('localNotificationActionPerformed',ev=>{ const cid=ev&&ev.notification&&ev.notification.extra&&ev.notification.extra.cid; if(cid) openCourse(cid,{note:true}); });
+
+/* 쓸 기능 · 학기 시작일 */
+function applyMods(){ document.querySelector('#steps [data-navkey="regs"]').hidden=!study.regOn; $('#modReg').checked=!!study.regOn; $('#modNotif').checked=!!study.notif; $('#termStart').value=study.start;
+  $('#sumMods').textContent=[study.regOn?'수강신청 켬':'',study.notif?'수업 알림':''].filter(Boolean).join(' · ')||'기본';
+  if(!study.regOn&&['strat','pick','build','reg'].includes(state.step)) setStep('today'); }
+$('#modReg').addEventListener('change',e=>{ study.regOn=e.target.checked; sSave(); applyMods(); });
+$('#modNotif').addEventListener('change',e=>setNotif(e.target.checked));
+$('#termStart').addEventListener('change',e=>{ if(e.target.value){ study.start=e.target.value; sSave(); } });
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-opencs]'); if(b) openCourse(b.dataset.opencs,{note:!!b.dataset.note,tab:b.dataset.tab}); });
+
 function renderAll(){ renderProfile(); renderSource(); renderCatalog(); renderWish(); renderHistory(); renderOpts(); if(state.step==='build') runBuild(); if(state.step==='reg') renderReg(); renderStrategy(); }
 
 /* ---------- 시작: 예시 상태로 열기 ---------- */
 load();
+sLoad();
 if(!state.wish.demo.length){ state.wish.demo=[{code:'CSE2010',required:true},{code:'CSE2020',required:true},{code:'CSE3030',required:false},{code:'MTH2030',required:false},{code:'GEN1001',required:true},{code:'LIB2102',required:false}]; }
 const OLD_PRESET='F11.201,F31.110,F33.107,F33.107L,F32.102,200.106,E11.146';
 if(!state.wish.snu.length||state.wish.snu.map(w=>w.code).join(',')===OLD_PRESET){ state.wish.snu=presetForProfile(); }
 if(state.src==='mine'&&!SOURCES.mine.sections.length) state.src='snu';
 renderAll();
+if(!study.regOn&&['strat','pick','build','reg'].includes(state.step)) state.step='today';
+applyMods(); setStep(state.step==='course'?'courses':state.step); scheduleNotifs();
 loadHist().then(()=>renderStrategy());
-loadSNU().then(()=>{ if(!state.wish.snu.length) state.wish.snu=presetForProfile(); save(); if(state.src==='snu'){ state.results=[]; renderAll(); if(state.step==='build') runBuild(); } else { renderSource(); renderProfile(); } });
+loadSNU().then(()=>{ if(!$('#addSheet').hidden) renderAddResults(); if(!state.wish.snu.length) state.wish.snu=presetForProfile(); save(); if(state.src==='snu'){ state.results=[]; renderAll(); if(state.step==='build') runBuild(); } else { renderSource(); renderProfile(); } });
 })();
 </script>
